@@ -21,9 +21,9 @@
 
         public override void Apply()
         {
-            KingdomManager_Patches.InitialNobles = (int)Math.Round((float)this.GetValue());
+            Patches.InitialNobles = (int)Math.Round((float)this.GetValue());
                         
-            if (KingdomManager_Patches.InitialNobles == 0)
+            if (Patches.InitialNobles == 0)
             {
                 Manager<SettingsManager>.Instance.SetGameBoolValue("Oct.Settings.Game.GuidedExperience", false);
             }
@@ -50,8 +50,8 @@
 
         public override void Apply()
         {
-            KingdomManager_Patches.RemoveKingomPrefs = !(bool)this.GetValue();
-            if (KingdomManager_Patches.RemoveKingomPrefs)
+            Patches.RemoveKingomPrefs = !(bool)this.GetValue();
+            if (Patches.RemoveKingomPrefs)
             {
                 Manager<KingdomManager>.Instance.kingdoms.ForEach(k => k.members.ForEach(m => {
                     m.SetKingdomSizePreference(3);
@@ -80,7 +80,7 @@
 
         public override void Apply()
         {
-            KingdomManager_Patches.DisableTutorials = !(bool)this.GetValue();
+            Patches.DisableTutorials = !(bool)this.GetValue();
             base.Apply();
         }
 
@@ -103,7 +103,7 @@
 
         public override void Apply()
         {
-            KingdomManager_Patches.SkipIntroDialog = (bool)this.GetValue();
+            Patches.SkipIntroDialog = (bool)this.GetValue();
             base.Apply();
         }
 

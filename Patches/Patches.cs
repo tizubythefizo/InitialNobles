@@ -1,19 +1,17 @@
 ﻿namespace InitialNobles.Patches
 {
     using HarmonyLib;
-    using HutongGames.PlayMaker;
     using System;
-    using System.Collections;
     using System.Collections.Generic;
+    using System.Globalization;
+    using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Reflection.Emit;
-    using System.Text;
     using UnityEngine;
-    using UnityEngine.UI;
+
 
     [HarmonyPatch]
-    public static class KingdomManager_Patches
+    public static class Patches
     {
         public static int codepoint = -1;
         public static int InitialNobles = 4;
@@ -48,7 +46,7 @@
                 codepoint = i;
                 
                 codeInstructions[i].opcode = OpCodes.Call;
-                codeInstructions[i].operand = typeof(KingdomManager_Patches).GetMethod("GetMaxInitialNobles");
+                codeInstructions[i].operand = typeof(Patches).GetMethod("GetMaxInitialNobles");
                 break;
             }
 
@@ -199,7 +197,7 @@
 
         [HarmonyPatch(typeof(KingdomSizePreferenceInformation), nameof(KingdomSizePreferenceInformation.GetResponse))]
         [HarmonyPrefix]
-        public static bool AddInformation_Prefix(KingdomSizePreferenceInformation __instance, Information __result)
+        public static bool AddInformation_Prefix(KingdomSizePreferenceInformation __instance, ref Information __result)
         {
             if (!RemoveKingomPrefs)
                 return true;
@@ -252,11 +250,12 @@
         [HarmonyPostfix]
         public static void Postfix(GuidedExperienceToggleSettingDefinition __instance, object value)
         {
-            if ((InitialNobles == 0 || DisableTutorials) && (bool)value)
+            if (__instance.id == "Oct.Settings.Game.GuidedExperience" && (InitialNobles == 0 || DisableTutorials) && (bool)value)
             {
                 __instance.SetValue(false);
             }
         }
+
 
         [HarmonyPatch(typeof(Pawn), nameof(Pawn.kingdomSizePreferenceInfo), MethodType.Getter)]
         [HarmonyPostfix]
@@ -267,14 +266,14 @@
             __result = null;
         }
 
-        [HarmonyPatch(typeof(ConversationManager), nameof(ConversationManager.ConversationRelevance))]
+        [HarmonyPatch(typeof(ConversationManager), nameof(ConversationManager.WasDiscussedInConversation))]
         [HarmonyPrefix]
-        public static void Prefix(ref Information info)
+        public static bool Prefix(ref Information info, ref bool __result)
         {
-            if (!RemoveKingomPrefs) return;
+            if (!RemoveKingomPrefs || info is not KingdomSizePreferenceInformation) return true;
 
-            if(info is KingdomSizePreferenceInformation)
-                info = null;
+            __result = true;
+            return false;
         }
 
         [HarmonyPatch(typeof(ScriptableConversationInstance), nameof(ScriptableConversationInstance.ExecuteStep))]
@@ -290,6 +289,101 @@
             }
 
             return;
+        }
+        
+        [HarmonyPatch(typeof(TimeManager), nameof(TimeManager.PopSoftPause))]
+        [HarmonyPrefix]
+        public static void Prefix(TimeManager __instance)
+        {
+            if(__instance.softPauseStack < 0)
+                __instance.softPauseStack = 0;
+        }
+
+        [HarmonyPatch(typeof(IntroDioramaBehavior), nameof(IntroDioramaBehavior.RerollCharacter))]
+        [HarmonyPrefix]
+        public static bool Prefix(IntroDioramaBehavior __instance)
+        {
+            if (!Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftShift)) return true;
+
+            RerollCharacter(__instance);
+            return false;
+        }
+
+        private static bool RollingCharacter = false; 
+
+        private static async void RerollCharacter(IntroDioramaBehavior dioramaBehavior)
+        {
+            if (!RollingCharacter)
+            {
+                RollingCharacter = true;
+
+                string key = UIElementBehavior.current?.obj as string;
+                Pawn speaker = key != null ? dioramaBehavior.context.GetValue(key) as Pawn : null;
+                DioramaCharacterInstance dioramaCharacterInstance = key != null && speaker != null ? DioramaBooth.Instance.dioramaBeh.GetSpeaker(speaker) : null;
+
+                if (key != null && speaker != null && dioramaCharacterInstance != null)
+                {
+                    CharacterManager manager = Manager<CharacterManager>.Instance;
+                    if (manager.typeEditor == null)
+                    {
+                        if (Input.GetKey(KeyCode.LeftShift))
+                        {
+                            ManagerBehavior.Instance.scenes.gameObject.SetActive(false);
+                            ManagerBehavior.Instance.center.gameObject.SetActive(true);
+                            manager.typeEditor = Manager<UIManager>.Instance.AddWindow(ManagerBehavior.Instance.center);
+                            manager.typeEditor.InstanceContents<UINoblesEditorWindowContents>().Initialize(ref speaker);
+
+                            while (manager.typeEditor != null)
+                            {
+                                await System.Threading.Tasks.Task.Yield();
+                            }
+                            ManagerBehavior.Instance.scenes.gameObject.SetActive(true);
+                            ManagerBehavior.Instance.center.gameObject.SetActive(false);
+                            string appearance = speaker.character.CopyAppearance();
+
+                            speaker.Transfer(PawnTransferReason.Deserted, null, PawnTitleType.None, null, null, true);
+                            if (speaker.party.place != null)
+                            {
+                                speaker.party.place.RemoveParty(speaker.party, true);
+                            }
+                            speaker.character.Damage(null, 10000f);
+
+                            var km = Manager<KingdomManager>.Instance;
+                            Pawn newSpeaker = km.GeneratePawn(speaker, 1, race: speaker.character.type); 
+                            newSpeaker.SetPosition(km.playerParty.place.pos);
+                            newSpeaker.Transfer(PawnTransferReason.Joined, km.playerRival, PawnTitleType.Noble, null, null, false);
+                            km.Chat(km.playerRival.ruler, newSpeaker, true, 10, Pawn.LightTopics.OpinionsAndRelationships);
+                            newSpeaker.Transfer(PawnTransferReason.Deserted, null, PawnTitleType.None, km.playerParty, null, false);
+                            km.playerParty.place.AddToPlace(newSpeaker, true);
+                            newSpeaker.character.PasteAppearance(appearance);
+                            newSpeaker.UpdateProfession();
+                            newSpeaker.RollAttractions();
+                            dioramaBehavior.context.SetValue(key, newSpeaker);
+                            Manager<UIManager>.Instance.PlayAudio(Manager<AudioManager>.Instance.global.GetHandle("Reroll"), 1f, OctoberMath.DistributedRandom(0.95f, 1.05f, 2f), 0f);
+                            Manager<EffectsManager>.Instance.InstanceEffect("IntroReroll", new EffectPositioning(dioramaCharacterInstance.behavior.transform.position, new Rotator(0f, -90f, 0f)));
+                            dioramaCharacterInstance.SetSpeaker(newSpeaker);
+                        }
+                        else
+                        {
+                            ManagerBehavior.Instance.scenes.gameObject.SetActive(false);
+                            ManagerBehavior.Instance.center.gameObject.SetActive(true);
+                            manager.typeEditor = Manager<UIManager>.Instance.AddWindow(ManagerBehavior.Instance.center);
+                            manager.typeEditor.InstanceContents<UICharacterPersonalityEditorWindowContents>().Initialize(ref speaker);
+
+                            while (manager.typeEditor != null)
+                            {
+                                await System.Threading.Tasks.Task.Yield();
+                            }
+                            ManagerBehavior.Instance.scenes.gameObject.SetActive(true);
+                            ManagerBehavior.Instance.center.gameObject.SetActive(false);
+                            speaker.UpdateProfession();
+                            dioramaCharacterInstance.SetSpeaker(speaker);
+                        }
+                        dioramaBehavior.UpdateUI();
+                    }
+                }
+                RollingCharacter = false; 
+            }
         }
     }
 }

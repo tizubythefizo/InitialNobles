@@ -10,6 +10,7 @@
 
         static Main()
         {
+            ManagerBehavior.SkipMainMenu = true;
             Debug.Log($"[InitialNobles] Loading");
             new Harmony("MrPurple6411.InitialNobles").PatchAll();
             Debug.Log($"[InitialNobles] Patched Successfully");
@@ -27,6 +28,14 @@
                 };
                 SettingsCategory.PostInit();
             }
+
+            SettingsCategory.AddSetting(new InformativeSettingDefinition(default)
+            {
+                id = "Oct.Settings.MySettings.Initial_Nobles_Section",
+                name = "Initial Nobles Settings:",
+                category = SettingsCategory,
+                order = SettingsCategory.settings.Count,
+            });
             SettingsCategory.AddSetting(new DisableTutorialPopUp(new OctDatGlobalInitializer()));
             SettingsCategory.AddSetting(new SkipIntroDialog(new OctDatGlobalInitializer()));
             SettingsCategory.AddSetting(new RemoveKingdomSizePreferences(new OctDatGlobalInitializer()));
