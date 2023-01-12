@@ -126,7 +126,9 @@
                     if (count > 0)
                     {
                         count--;
-                        if (member.character.inventory.equipment.Where(e => e != null).Count() <= 2)
+
+                        var equipment = member.character.inventory.GetPrivateField<List<Item>>("equipment");
+                        if (equipment.Where(e => e != null).Count() <= 2)
                         {
                             member.character.inventory.GenerateEquipment();
                         }
@@ -173,11 +175,11 @@
         {
             if (!RemoveKingomPrefs) return true;
 
-            __instance.kingdomSizePreference = int.MaxValue / 2;
+            __instance.GetType().GetProperty("kingdomSizePreference").SetValue(__instance, int.MaxValue / 2);
             if (__instance.kingdomSizePreferenceInfo != null)
             {
                 __instance.RemoveInformation(__instance.kingdomSizePreferenceInfo);
-                __instance.kingdomSizePreferenceInfo = null;
+                __instance.GetType().GetProperty("kingdomSizePreferenceInfo").SetValue(__instance, null);
             }
             RemoveKingdomSizeFeeling(__instance);
             return false;
@@ -211,9 +213,14 @@
             foreach (Pawn pawn2 in Manager<KingdomManager>.Instance.pawns)
             {
                 Opinion opinion = pawn.character.pawn.GetOpinion(pawn2);
-                if (opinion != null && opinion.modifiers != null)
+                
+                if (opinion == null)
+                { return; }
+
+                var modifiers = opinion.GetPrivateField<List<FeelingModifier>>("modifiers");
+                if (modifiers != null)
                 {
-                    foreach (var feeling in new List<FeelingModifier>(opinion.modifiers))
+                    foreach (var feeling in new List<FeelingModifier>(modifiers))
                     {
                         if (feeling.reason.info is KingdomSizePreferenceInformation)
                         {
@@ -231,13 +238,15 @@
         [HarmonyPrefix]
         public static void Prefix_PostLoad(Pawn __instance)
         {
-            if (!RemoveKingomPrefs) return;
+            if (!RemoveKingomPrefs)
+            { return; }
 
-            __instance.kingdomSizePreference = int.MaxValue / 2;
+            __instance.GetType().GetProperty("kingdomSizePreference").SetValue(__instance, int.MaxValue / 2);
             if (__instance.kingdomSizePreferenceInfo != null)
             {
                 __instance.RemoveInformation(__instance.kingdomSizePreferenceInfo);
-                __instance.kingdomSizePreferenceInfo = null;
+
+                __instance.GetType().GetProperty("kingdomSizePreferenceInfo").SetValue(__instance, null);
             }
             RemoveKingdomSizeFeeling(__instance);
             return;
@@ -296,7 +305,11 @@
         public static void Prefix(TimeManager __instance)
         {
             if(__instance.softPauseStack < 0)
-                __instance.softPauseStack = 0;
+            {
+                // As per killabi, this shouldn't be < 0 but it may be being set that way due to this mods skipping of the intro.
+                __instance.SetPrivateField<int>("softPauseStack", 0);
+            }
+
         }
 
         [HarmonyPatch(typeof(IntroDioramaBehavior), nameof(IntroDioramaBehavior.RerollCharacter))]
@@ -324,16 +337,17 @@
                 if (key != null && speaker != null && dioramaCharacterInstance != null)
                 {
                     CharacterManager manager = Manager<CharacterManager>.Instance;
-                    if (manager.typeEditor == null)
+                    if (manager.GetPrivateField<UIWindowBehavior>("typeEditor") == null)
                     {
                         if (Input.GetKey(KeyCode.LeftShift))
                         {
                             ManagerBehavior.Instance.scenes.gameObject.SetActive(false);
                             ManagerBehavior.Instance.center.gameObject.SetActive(true);
-                            manager.typeEditor = Manager<UIManager>.Instance.AddWindow(ManagerBehavior.Instance.center);
-                            manager.typeEditor.InstanceContents<UINoblesEditorWindowContents>().Initialize(ref speaker);
+                            var typeEditor = Manager<UIManager>.Instance.AddWindow(ManagerBehavior.Instance.center);
+                            manager.SetPrivateField<UIWindowBehavior>("typeEditor", typeEditor);
+                            typeEditor.InstanceContents<UINoblesEditorWindowContents>().Initialize(ref speaker);
 
-                            while (manager.typeEditor != null)
+                            while (manager.GetPrivateField<UIWindowBehavior>("typeEditor") != null)
                             {
                                 await System.Threading.Tasks.Task.Yield();
                             }
@@ -367,10 +381,12 @@
                         {
                             ManagerBehavior.Instance.scenes.gameObject.SetActive(false);
                             ManagerBehavior.Instance.center.gameObject.SetActive(true);
-                            manager.typeEditor = Manager<UIManager>.Instance.AddWindow(ManagerBehavior.Instance.center);
-                            manager.typeEditor.InstanceContents<UICharacterPersonalityEditorWindowContents>().Initialize(ref speaker);
 
-                            while (manager.typeEditor != null)
+                            var typeEditor = Manager<UIManager>.Instance.AddWindow(ManagerBehavior.Instance.center);
+                            manager.SetPrivateField<UIWindowBehavior>("typeEditor", typeEditor);
+                            typeEditor.InstanceContents<UICharacterPersonalityEditorWindowContents>().Initialize(ref speaker);
+
+                            while (manager.GetPrivateField<UIWindowBehavior>("typeEditor") != null)
                             {
                                 await System.Threading.Tasks.Task.Yield();
                             }

@@ -6,6 +6,8 @@ using System.Linq;
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using InitialNobles;
+using System.Runtime.ConstrainedExecution;
 
 public class UICharacterPersonalityEditorWindowContents : UIWindowContents
 {
@@ -191,7 +193,12 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
         H1V2 = UIManager.Instance.AddVerticalGroup(H1).SetChildAlignment(TextAnchor.UpperCenter);
         H1V2.SetPadding(new RectOffset(5, 5, 5, 5));
 
-        int attLength = this.pawn.character.attributes.Length;
+        var attributes = this.pawn.character.GetPrivateField<CharacterAttribute[]>("attributes");
+
+        if (attributes == null)
+        { throw new NobleFatesBreakingChangeException("CharacterAttributes attributes no longer exists."); }
+
+        int attLength = attributes.Length;
 
         attributeLabels = new UILabelBehavior[attLength];
         attributeSliders = new UISliderBehavior[attLength];
@@ -201,7 +208,7 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
 
 
         int i = 0;
-        foreach(var attribute in this.pawn.character.attributes)
+        foreach(var attribute in attributes)
         {
             int index = i;
             UILayoutBehavior attributeLayout = (UILayoutBehavior)UIManager.Instance.AddHorizontalGroup(H1V2)
@@ -341,7 +348,8 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
     {
         Opinion.Strength strength = (Opinion.Strength)obj;
         var opinion = opinions[index];
-        opinion.raw = Feeling.ValueToRaw(Opinion.ToValue(strength));
+
+        opinion.SetPrivateField<float>("raw", Feeling.ValueToRaw(Opinion.ToValue(strength)));
         opinion.UpdateInformation();
         opinionButtons[index].SetText($"{Opinion.ToString(strength)} {opinion.subject.GetName()}");
     }
@@ -443,7 +451,13 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
 
         for (int i = 0; i < type.attributes.Count; i++)
         {
-            var attribute = character.attributes[i];
+            var attributes = character.GetPrivateField<CharacterAttribute[]>("attributes");
+
+            if (attributes == null)
+            { throw new NobleFatesBreakingChangeException("CharacterAttributes attributes no longer exists."); }
+
+            var attribute = attributes[i];
+
             if (!attributePotentialLocks[i])
             {
                 float value = UnityEngine.Random.value;
@@ -494,7 +508,7 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
                         num5 = Mathf.Clamp(LerpSimilarity(num5, rival.GetOpinionValue(subject, true), min, max, minSimilarity), min, max);
                     }
                     float raw = Feeling.ValueToRaw(num5);
-                    opinions[i].raw = raw;
+                    opinions[i].SetPrivateField<float>("raw", raw);
                     opinions[i].UpdateInformation();
                     opinionButtons[i].SetText($"{Opinion.ToString(opinions[i].GetStrength())} {opinions[i].subject.GetName()}");
                 }
@@ -521,17 +535,17 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
     }
 
     // Start is called before the first frame update
-    public override void Awake()
+    protected override void Awake()
     {
         base.Awake();
     }
 
-    public override void OnDisable()
+    protected override void OnDisable()
     {
         base.OnDisable();
     }
 
-    public override void Update()
+    protected override void Update()
     {
         base.Update();
 

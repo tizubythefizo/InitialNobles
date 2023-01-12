@@ -3,6 +3,9 @@ using System.IO;
 using UnityEngine;
 using TMPro;
 using System.Linq;
+using InitialNobles;
+using System.Reflection;
+using System;
 
 public class UINoblesEditorWindowContents : UIWindowContents
 {
@@ -275,7 +278,12 @@ public class UINoblesEditorWindowContents : UIWindowContents
     {
         UIWindowBehavior typePopup = UIManager.Instance.AddPopupWindow();
         UISelectionPopupWindowContents contents = typePopup.InstanceContents<UISelectionPopupWindowContents>();
-        foreach (CharacterType type in Manager<CharacterManager>.Instance.types.Where(t => t.genus == CharacterType.Genus.Humanoid))
+        var characterTypes = Manager<CharacterManager>.Instance.GetPrivateField<List<CharacterType>>("types");
+
+        if (characterTypes != null)
+        { throw new NobleFatesBreakingChangeException("field 'types' no longer exists on CharacterManager or the field was set to null"); }
+
+        foreach (CharacterType type in characterTypes.Where(t => t.genus == CharacterType.Genus.Humanoid))
         {
             contents.AddOption(type.name, type);
         }
@@ -495,16 +503,17 @@ public class UINoblesEditorWindowContents : UIWindowContents
     {
         if(character != null)
         {
-            character.variant = charTypeVariant;
+            character.GetType().GetProperty("variant").SetValue(character, charTypeVariant);
 
             if (character.type != startCharType || character.variant != startCharTypeVariant)
             {
                 character.cosmetics.Clear();
-                character.name = character.variant.names[UnityEngine.Random.Range(0, character.variant.names.Count)];
+                character.SetName(character.variant.names[UnityEngine.Random.Range(0, character.variant.names.Count)]);
                 bool flag4 = character.variant.materialSlots != null;
                 if (flag4)
                 {
-                    character.materials = new List<CharacterMaterial>();
+                    
+                    character.GetType().GetProperty("materials").SetValue(character, new List<CharacterMaterial>());
                     foreach (CharacterTypeMaterialSlot mat in character.variant.materialSlots)
                     {
                         CharacterMaterial material = mat.Roll();
@@ -518,21 +527,21 @@ public class UINoblesEditorWindowContents : UIWindowContents
                 bool flag6 = character.variant.lexicon != null;
                 if (flag6)
                 {
-                    character.lexicon = new CharacterLexicon(character.variant.lexicon);
+                    character.GetType().GetProperty("lexicon").SetValue(character, new CharacterLexicon(character.variant.lexicon));
                 }
-                character.gender = character.variant.gender;
+                character.GetType().GetProperty("gender").SetValue(character, character.variant.gender);
                 bool flag7 = character.gender != "Male";
                 if (flag7)
                 {
-                    character.bust = UnityEngine.Random.value;
+                    character.GetType().GetProperty("bust").SetValue(character, UnityEngine.Random.value);
                 }
-                character.weight = UnityEngine.Random.value;
+                character.GetType().GetProperty("weight").SetValue(character, UnityEngine.Random.value);
                 bool flag8 = character.variant.voices.Count > 0;
                 if (flag8)
                 {
-                    character.voice = character.variant.voices[UnityEngine.Random.Range(0, character.variant.voices.Count)];
+                    character.GetType().GetProperty("voice").SetValue(character, character.variant.voices[UnityEngine.Random.Range(0, character.variant.voices.Count)]);
                 }
-                character.pitch = UnityEngine.Random.Range(character.variant.pitchFrom, character.variant.pitchTo);
+                character.GetType().GetProperty("pitch").SetValue(character, UnityEngine.Random.Range(character.variant.pitchFrom, character.variant.pitchTo));
 
                 character.pawn.RerollAttractions();
             }
@@ -566,7 +575,7 @@ public class UINoblesEditorWindowContents : UIWindowContents
         }
         else if (randomize && !charTypeVariantLocked)
         {
-            charTypeVariant = charType.variants[Random.Range(0, charType.variants.Count)];
+            charTypeVariant = charType.variants[UnityEngine.Random.Range(0, charType.variants.Count)];
         }
         charTypeVariantButton.SetText(charTypeVariant.name);
 
@@ -600,25 +609,25 @@ public class UINoblesEditorWindowContents : UIWindowContents
             {
                 if (charType.skinLinearColor)
                 {
-                    skinColorSliders[0].SetValue(Random.value);
+                    skinColorSliders[0].SetValue(UnityEngine.Random.value);
                 }
                 else
                 {
-                    skinColorSliders[0].SetValue(Random.value);
-                    skinColorSliders[1].SetValue(Random.value);
-                    skinColorSliders[2].SetValue(Random.value);
+                    skinColorSliders[0].SetValue(UnityEngine.Random.value);
+                    skinColorSliders[1].SetValue(UnityEngine.Random.value);
+                    skinColorSliders[2].SetValue(UnityEngine.Random.value);
                 }
             }
 
             if (charType.hairColors == null)
             {
-                hairColorSliders[0].SetValue(Random.value);
-                hairColorSliders[1].SetValue(Random.value);
-                hairColorSliders[2].SetValue(Random.value);
+                hairColorSliders[0].SetValue(UnityEngine.Random.value);
+                hairColorSliders[1].SetValue(UnityEngine.Random.value);
+                hairColorSliders[2].SetValue(UnityEngine.Random.value);
             }
 
-            bustSlider.SetValue(Random.value);
-            weightSlider.SetValue(Mathf.Pow(Random.value, 2));
+            bustSlider.SetValue(UnityEngine.Random.value);
+            weightSlider.SetValue(Mathf.Pow(UnityEngine.Random.value, 2));
 
             irisOffsetSliders[0].SetValue(OctoberMath.DistributedRandom(0f, 1f, charType.irisOffsetExponent));
             irisOffsetSliders[1].SetValue(OctoberMath.DistributedRandom(0f, 1f, charType.irisOffsetExponent));
@@ -717,7 +726,7 @@ public class UINoblesEditorWindowContents : UIWindowContents
     }
 
     // Start is called before the first frame update
-    public override void Awake()
+    protected override void Awake()
     {
         base.Awake();
 
@@ -937,7 +946,7 @@ public class UINoblesEditorWindowContents : UIWindowContents
         UIManager.Instance.AddButton(window, "Close", Close);
     }
 
-    public override void OnDisable()
+    protected override void OnDisable()
     {
         base.OnDisable();
 
@@ -1159,7 +1168,7 @@ public class UINoblesEditorWindowContents : UIWindowContents
         }
     }
 
-    public override void Update()
+    protected override void Update()
     {
         base.Update();
 

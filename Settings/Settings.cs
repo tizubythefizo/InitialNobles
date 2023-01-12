@@ -8,7 +8,7 @@
     {
         public InitialNoblesSlider(OctDatGlobalInitializer initializer) : base(initializer)
         {
-            this.id = "Oct.Settings.MySettings.StartingNobles";
+            this.SetId("Oct.Settings.MySettings.StartingNobles");
             this.name = "Starting Nobles";
             this.order = Main.SettingsCategory.settings.Count;
             this.category = Main.SettingsCategory;
@@ -41,7 +41,7 @@
     {
         public RemoveKingdomSizePreferences(OctDatGlobalInitializer initializer) : base(initializer)
         {
-            this.id = "Oct.Settings.MySettings.RemoveKingdomSizePreferences";
+            this.SetId("Oct.Settings.MySettings.RemoveKingdomSizePreferences");
             this.name = "Kingdom Size Preferences";
             this.order = Main.SettingsCategory.settings.Count;
             this.category = Main.SettingsCategory;
@@ -71,7 +71,7 @@
     {
         public DisableTutorialPopUp(OctDatGlobalInitializer initializer) : base(initializer)
         {
-            this.id = "Oct.Settings.MySettings.DisableTutorialPopUp";
+            this.SetId("Oct.Settings.MySettings.DisableTutorialPopUp");
             this.name = "Allow Tutorials";
             this.order = Main.SettingsCategory.settings.Count;
             this.category = Main.SettingsCategory;
@@ -94,7 +94,7 @@
     {
         public SkipIntroDialog(OctDatGlobalInitializer initializer) : base(initializer)
         {
-            this.id = "Oct.Settings.MySettings.SkipIntroDialog";
+            this.SetId("Oct.Settings.MySettings.SkipIntroDialog");
             this.name = "Fast Intro";
             this.order = Main.SettingsCategory.settings.Count;
             this.category = Main.SettingsCategory;

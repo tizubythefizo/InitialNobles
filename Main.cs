@@ -20,22 +20,23 @@
             {
                 SettingsCategory = new SettingsCategory(new OctDatGlobalInitializer())
                 {
-                    id = "MrPurple6411_Settings",
                     name = "MrPurple's Mod Settings",
                     canReset = true,
                     global = true,
                     order = -1000
                 };
+                SettingsCategory.SetId("MrPurple6411_Settings");
                 SettingsCategory.PostInit();
             }
 
-            SettingsCategory.AddSetting(new InformativeSettingDefinition(default)
-            {
-                id = "Oct.Settings.MySettings.Initial_Nobles_Section",
-                name = "Initial Nobles Settings:",
-                category = SettingsCategory,
-                order = SettingsCategory.settings.Count,
-            });
+
+            var infoSettingDefinition = new InformativeSettingDefinition(default);
+            infoSettingDefinition.SetId("Oct.Settings.MySettings.Initial_Nobles_Section");
+            infoSettingDefinition.name = "Initial Nobles Settings:";
+            infoSettingDefinition.category = SettingsCategory;
+            infoSettingDefinition.order = SettingsCategory.settings.Count;
+
+            SettingsCategory.AddSetting(infoSettingDefinition);
             SettingsCategory.AddSetting(new DisableTutorialPopUp(new OctDatGlobalInitializer()));
             SettingsCategory.AddSetting(new SkipIntroDialog(new OctDatGlobalInitializer()));
             SettingsCategory.AddSetting(new RemoveKingdomSizePreferences(new OctDatGlobalInitializer()));

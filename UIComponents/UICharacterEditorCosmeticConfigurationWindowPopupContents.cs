@@ -77,7 +77,7 @@ public class UICharacterEditorCosmeticConfigurationWindowPopupContents : UIWindo
         charBeh.UpdateCosmetics();
     }
 
-    public override void Start()
+    protected override void Start()
     {
         base.Start();
 
