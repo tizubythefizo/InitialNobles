@@ -20,6 +20,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Debug\**" />
+    <EmbeddedResource Remove="Debug\**" />
+    <None Remove="Debug\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.2.1" ExcludeAssets="runtime" />
   </ItemGroup>
   

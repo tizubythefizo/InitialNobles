@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using InitialNobles;
 using System.Runtime.ConstrainedExecution;
+using System.Reflection;
 
 public class UICharacterPersonalityEditorWindowContents : UIWindowContents
 {
@@ -349,7 +350,7 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
         Opinion.Strength strength = (Opinion.Strength)obj;
         var opinion = opinions[index];
 
-        opinion.SetPrivateField<float>("raw", Feeling.ValueToRaw(Opinion.ToValue(strength)));
+        opinion.GetType().GetProperty("raw").SetValue(opinion, Feeling.ValueToRaw(Opinion.ToValue(strength)));
         opinion.UpdateInformation();
         opinionButtons[index].SetText($"{Opinion.ToString(strength)} {opinion.subject.GetName()}");
     }
@@ -508,7 +509,7 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
                         num5 = Mathf.Clamp(LerpSimilarity(num5, rival.GetOpinionValue(subject, true), min, max, minSimilarity), min, max);
                     }
                     float raw = Feeling.ValueToRaw(num5);
-                    opinions[i].SetPrivateField<float>("raw", raw);
+                    opinions[i].GetType().GetProperty("raw").SetValue(opinions[i], raw);
                     opinions[i].UpdateInformation();
                     opinionButtons[i].SetText($"{Opinion.ToString(opinions[i].GetStrength())} {opinions[i].subject.GetName()}");
                 }
