@@ -280,9 +280,6 @@ public class UINoblesEditorWindowContents : UIWindowContents
         UISelectionPopupWindowContents contents = typePopup.InstanceContents<UISelectionPopupWindowContents>();
         var characterTypes = Manager<CharacterManager>.Instance.GetPrivateField<List<CharacterType>>("types");
 
-        if (characterTypes != null)
-        { throw new NobleFatesBreakingChangeException("field 'types' no longer exists on CharacterManager or the field was set to null"); }
-
         foreach (CharacterType type in characterTypes.Where(t => t.genus == CharacterType.Genus.Humanoid))
         {
             contents.AddOption(type.name, type);

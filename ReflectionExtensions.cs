@@ -23,7 +23,10 @@ namespace InitialNobles
         public static T GetPrivateField<T>(this object target, string fieldName)
         {
             var field = FindField(target, fieldName);
-            // Should I null check here or just let it null ref? To be or not to be, that is the question.
+
+            if (field == null)
+            { throw new FieldNotFoundException("The field '" + fieldName + "' could not be found on '" + target.GetType().Name + "'"); }
+
             return (T)field?.GetValue(target);
         }
 
@@ -37,13 +40,34 @@ namespace InitialNobles
         public static void SetPrivateField<T>(this object target, string fieldName, T value)
         {
             // This could be done without being generic, but by doing it generic we avoid boxing/unboxing.
-            var field = FindField(target, fieldName);
+            var field = FindField(target, fieldName);            
+
+            if (field == null)
+            { throw new FieldNotFoundException("The field '" + fieldName + "' could not be found on '" + target.GetType().Name + "'"); }
+
             field.SetValue(target, value);
         }
 
         private static FieldInfo FindField(object obj, string fieldName)
         {
-            var field = obj.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var objType = obj.GetType();
+            var field = objType.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (field == null && objType != typeof(object))
+            {
+                var type = objType.BaseType;
+
+                while (type != typeof(object))
+                {
+                    field = type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    if (field == null)
+                    { type = type.BaseType; }
+                    else
+                    { break; }
+                }
+            }
+
             return field;
         }
     }
