@@ -175,11 +175,11 @@
         {
             if (!RemoveKingomPrefs) return true;
 
-            __instance.GetType().GetProperty("kingdomSizePreference").SetValue(__instance, int.MaxValue / 2);
+            __instance.SetPrivateProperty<int>("kingdomSizePreference", int.MaxValue / 2);
             if (__instance.kingdomSizePreferenceInfo != null)
             {
                 __instance.RemoveInformation(__instance.kingdomSizePreferenceInfo);
-                __instance.GetType().GetProperty("kingdomSizePreferenceInfo").SetValue(__instance, null);
+                __instance.SetPrivateProperty<KingdomSizePreferenceInformation>("kingdomSizePreferenceInfo", null);
             }
             RemoveKingdomSizeFeeling(__instance);
             return false;
@@ -241,12 +241,12 @@
             if (!RemoveKingomPrefs)
             { return; }
 
-            __instance.GetType().GetProperty("kingdomSizePreference").SetValue(__instance, int.MaxValue / 2);
+            __instance.SetPrivateProperty<int>("kingdomSizePreference", int.MaxValue / 2);
             if (__instance.kingdomSizePreferenceInfo != null)
             {
                 __instance.RemoveInformation(__instance.kingdomSizePreferenceInfo);
 
-                __instance.GetType().GetProperty("kingdomSizePreferenceInfo").SetValue(__instance, null);
+                __instance.SetPrivateProperty<KingdomSizePreferenceInformation>("kingdomSizePreferenceInfo", null);
             }
             RemoveKingdomSizeFeeling(__instance);
             return;

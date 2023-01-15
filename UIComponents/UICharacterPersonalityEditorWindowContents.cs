@@ -350,7 +350,7 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
         Opinion.Strength strength = (Opinion.Strength)obj;
         var opinion = opinions[index];
 
-        opinion.GetType().GetProperty("raw").SetValue(opinion, Feeling.ValueToRaw(Opinion.ToValue(strength)));
+        opinion.SetPrivateProperty<float>("raw", Feeling.ValueToRaw(Opinion.ToValue(strength)));
         opinion.UpdateInformation();
         opinionButtons[index].SetText($"{Opinion.ToString(strength)} {opinion.subject.GetName()}");
     }
@@ -509,7 +509,7 @@ public class UICharacterPersonalityEditorWindowContents : UIWindowContents
                         num5 = Mathf.Clamp(LerpSimilarity(num5, rival.GetOpinionValue(subject, true), min, max, minSimilarity), min, max);
                     }
                     float raw = Feeling.ValueToRaw(num5);
-                    opinions[i].GetType().GetProperty("raw").SetValue(opinions[i], raw);
+                    opinions[i].SetPrivateProperty<float>("raw", raw);
                     opinions[i].UpdateInformation();
                     opinionButtons[i].SetText($"{Opinion.ToString(opinions[i].GetStrength())} {opinions[i].subject.GetName()}");
                 }

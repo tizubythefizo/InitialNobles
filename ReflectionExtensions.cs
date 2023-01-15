@@ -25,7 +25,7 @@ namespace InitialNobles
             var field = FindField(target, fieldName);
 
             if (field == null)
-            { throw new FieldNotFoundException("The field '" + fieldName + "' could not be found on '" + target.GetType().Name + "'"); }
+            { throw new MemberNotFoundException("The field '" + fieldName + "' could not be found on '" + target.GetType().Name + "'"); }
 
             return (T)field?.GetValue(target);
         }
@@ -43,7 +43,7 @@ namespace InitialNobles
             var field = FindField(target, fieldName);            
 
             if (field == null)
-            { throw new FieldNotFoundException("The field '" + fieldName + "' could not be found on '" + target.GetType().Name + "'"); }
+            { throw new MemberNotFoundException("The field '" + fieldName + "' could not be found on '" + target.GetType().Name + "'"); }
 
             field.SetValue(target, value);
         }
@@ -69,6 +69,44 @@ namespace InitialNobles
             }
 
             return field;
+        }
+
+        public static void SetPrivateProperty<T>(this object target, string fieldName, T value)
+        {
+            var property = FindProperty(target, fieldName);
+
+            if (property == null)
+            { throw new MemberNotFoundException("Could not find property '" + fieldName + "' on class '" + target.GetType().Name + "' or its base types."); }
+
+            //Needed for public properties with private setters
+            if (!property.CanWrite)
+            { property = property.DeclaringType.GetProperty(fieldName, BindingFlags.NonPublic | BindingFlags.Instance); }
+
+
+            property.SetValue(target, value);
+        }
+
+        private static PropertyInfo FindProperty(object obj, string fieldName)
+        {
+            var objType = obj.GetType();
+            var property = objType.GetProperty(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (property == null)
+            {
+                var type = objType.BaseType;
+
+                while (type != typeof(object))
+                {
+                    property = type.GetProperty(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    if (property == null)
+                    { type = type.BaseType; }
+                    else
+                    { break; }
+                }
+            }
+
+            return property;
         }
     }
 }

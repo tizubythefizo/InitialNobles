@@ -500,7 +500,7 @@ public class UINoblesEditorWindowContents : UIWindowContents
     {
         if(character != null)
         {
-            character.GetType().GetProperty("variant").SetValue(character, charTypeVariant);
+            character.SetPrivateProperty<CharacterTypeVariant>("variant", charTypeVariant);
 
             if (character.type != startCharType || character.variant != startCharTypeVariant)
             {
@@ -509,8 +509,7 @@ public class UINoblesEditorWindowContents : UIWindowContents
                 bool flag4 = character.variant.materialSlots != null;
                 if (flag4)
                 {
-                    
-                    character.GetType().GetProperty("materials").SetValue(character, new List<CharacterMaterial>());
+                    character.SetPrivateProperty<List<CharacterMaterial>>("materials", new List<CharacterMaterial>());
                     foreach (CharacterTypeMaterialSlot mat in character.variant.materialSlots)
                     {
                         CharacterMaterial material = mat.Roll();
@@ -524,21 +523,22 @@ public class UINoblesEditorWindowContents : UIWindowContents
                 bool flag6 = character.variant.lexicon != null;
                 if (flag6)
                 {
-                    character.GetType().GetProperty("lexicon").SetValue(character, new CharacterLexicon(character.variant.lexicon));
+                    character.SetPrivateProperty<CharacterLexicon>("lexicon", new CharacterLexicon(character.variant.lexicon));
                 }
-                character.GetType().GetProperty("gender").SetValue(character, character.variant.gender);
+                character.SetPrivateProperty<string>("gender", character.variant.gender);
                 bool flag7 = character.gender != "Male";
                 if (flag7)
                 {
-                    character.GetType().GetProperty("bust").SetValue(character, UnityEngine.Random.value);
+                    character.SetPrivateProperty<float>("bust", UnityEngine.Random.value);
                 }
-                character.GetType().GetProperty("weight").SetValue(character, UnityEngine.Random.value);
+
+                character.SetPrivateProperty<float>("weight", UnityEngine.Random.value);
                 bool flag8 = character.variant.voices.Count > 0;
                 if (flag8)
                 {
-                    character.GetType().GetProperty("voice").SetValue(character, character.variant.voices[UnityEngine.Random.Range(0, character.variant.voices.Count)]);
+                    character.SetPrivateProperty<string>("voice", character.variant.voices[UnityEngine.Random.Range(0, character.variant.voices.Count)]);
                 }
-                character.GetType().GetProperty("pitch").SetValue(character, UnityEngine.Random.Range(character.variant.pitchFrom, character.variant.pitchTo));
+                character.SetPrivateProperty<float>("pitch", UnityEngine.Random.value);
 
                 character.pawn.RerollAttractions();
             }

@@ -7,21 +7,21 @@ using System.Runtime.Serialization;
 namespace InitialNobles
 {
     [Serializable]
-    internal class FieldNotFoundException : Exception
+    internal class MemberNotFoundException : Exception
     {
-        public FieldNotFoundException()
+        public MemberNotFoundException()
         {
         }
 
-        public FieldNotFoundException(string message) : base(message)
+        public MemberNotFoundException(string message) : base(message)
         {
         }
 
-        public FieldNotFoundException(string message, Exception innerException) : base(message, innerException)
+        public MemberNotFoundException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        protected FieldNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected MemberNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }
