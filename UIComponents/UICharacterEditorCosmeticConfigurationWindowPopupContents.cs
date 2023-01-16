@@ -97,6 +97,11 @@ public class UICharacterEditorCosmeticConfigurationWindowPopupContents : UIWindo
                     continue;
                 }
 
+                if (i > cosmeticInstance.colorLerps.Count - 1)
+                {
+                    continue;
+                }
+
                 colorSliders[i] = new UICosmeticConfigurationColorSliders();
 
                 string name = "Color " + (i + 1);
@@ -107,21 +112,16 @@ public class UICharacterEditorCosmeticConfigurationWindowPopupContents : UIWindo
 
                 UIManager.Instance.AddLabel(window, name);
 
-                //Colorlerps can, for some reason, not have the same amount of items as cosmeticInstance.cosmetic.instanceColors.
-                //code was originally written that assumed they would always be in sync. I think if they're out of sync, for now, I should 
-                // just re-use the last colorLerp and see if that breaks things.
-                var colorLerpsIndex = i;
-
-                if (i > cosmeticInstance.colorLerps.Count - 1)
-                {
-                    colorLerpsIndex = cosmeticInstance.colorLerps.Count - 1;
-                }
-
-                colorSliders[i].colorRSlider = (UISliderBehavior)UIManager.Instance.AddSlider(window).SetValue(cosmeticInstance.colorLerps[colorLerpsIndex].x).AddValueChangedHandler(SetColorRValue).SetIndex(i);
+                // Colorlerps can, for some reason, not have the same amount of items as cosmeticInstance.cosmetic.instanceColors.
+                // code was originally written that assumed they would always be in sync. If they're out of sync, I'm skipping them (code above).
+                // Trying to use the last colorlerp value just breaks further down the line when the sliders are moved.
+                // There may be a need to check specifically for a whitelist of editable values instead of just assuming everything
+                // is a color.                
+                colorSliders[i].colorRSlider = (UISliderBehavior)UIManager.Instance.AddSlider(window).SetValue(cosmeticInstance.colorLerps[i].x).AddValueChangedHandler(SetColorRValue).SetIndex(i);
                 if (!cosmeticInstance.cosmetic.instanceColors[i].linearColor)
                 {
-                    colorSliders[i].colorGSlider = (UISliderBehavior)UIManager.Instance.AddSlider(window).SetValue(cosmeticInstance.colorLerps[colorLerpsIndex].y).AddValueChangedHandler(SetColorGValue).SetIndex(i);
-                    colorSliders[i].colorBSlider = (UISliderBehavior)UIManager.Instance.AddSlider(window).SetValue(cosmeticInstance.colorLerps[colorLerpsIndex].z).AddValueChangedHandler(SetColorBValue).SetIndex(i);
+                    colorSliders[i].colorGSlider = (UISliderBehavior)UIManager.Instance.AddSlider(window).SetValue(cosmeticInstance.colorLerps[i].y).AddValueChangedHandler(SetColorGValue).SetIndex(i);
+                    colorSliders[i].colorBSlider = (UISliderBehavior)UIManager.Instance.AddSlider(window).SetValue(cosmeticInstance.colorLerps[i].z).AddValueChangedHandler(SetColorBValue).SetIndex(i);
                 }
             }
         }
